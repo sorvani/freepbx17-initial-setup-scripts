@@ -10,7 +10,7 @@ fi
 printf "Updating operating system.\n" | tee -a $logfile
 printf "This can take a seemingly excessive amount of time depending on\n" | tee -a $logfile
 printf "how many Linux updates have been released since the last update.\n" | tee -a $logfile
-apt update -y | tee -a $logfile
+apt update | tee -a $logfile
 apt upgrade -y | tee -a $logfile
 apt autoremove -y | tee -a $logfile
 

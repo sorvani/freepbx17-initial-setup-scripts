@@ -4,7 +4,7 @@ if [ "$EUID" -ne 0 ]
   exit
 fi
 
-# This script is designed to be executed when you need to add another user to the FrePBX 17 host Debian system.
+# This script is designed to be executed when you need to add another user to the FreePBX 17 host Debian system.
 
 # collect the linux username and the ssh public key source for the person runnning the script
 read -p "Enter a new username to use for SSH access: " myUserName
