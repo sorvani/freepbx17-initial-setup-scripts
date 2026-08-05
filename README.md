@@ -25,9 +25,15 @@ chmod +x root_setup.sh
 ./root_setup.sh
 ```
 
-It asks for a Linux username and a GitHub username, then creates the account
-with sudo, installs [ssh-key-sync](https://github.com/shoenig/ssh-key-sync), and
-pulls that GitHub account's public keys into `authorized_keys`.
+It asks for a Linux username and where to get that user's SSH public keys, then
+creates the account with sudo and writes the keys to `authorized_keys`. The key
+source can be any of:
+
+| Input | What happens |
+| --- | --- |
+| A GitHub username | Fetches `https://github.com/<user>.keys` |
+| A `http://` or `https://` URL | Fetches it as-is; expects an `authorized_keys` style list |
+| A single public key (`ssh-ed25519 AAAA...`) | Written straight to `authorized_keys` |
 
 The password is set to `ChangeMe` and **expired immediately**, so the first SSH
 login forces a change. Log back in as the new user before continuing with the
@@ -55,8 +61,7 @@ UI.
 sudo ./add_debian_user.sh
 ```
 
-The user half of `root_setup.sh` on its own, for a host where `ssh-key-sync` is
-already installed.
+The user half of `root_setup.sh` on its own, with the same key source options.
 
 ## License
 

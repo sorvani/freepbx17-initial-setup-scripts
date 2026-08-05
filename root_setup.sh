@@ -6,9 +6,10 @@ fi
 
 # This script is designed to be executed immediately after completing the installation of Debian, prior to doing anything with FreePBX 17.
 
-# collect the linux username and github username of the person runnning the script
+# collect the linux username and the ssh public key source for the person runnning the script
 read -p "Enter a new username to use for SSH access: " myUserName
-read -p "Enter the github username for $myUserName: " myGitName
+echo "Public keys can be a github username, a URL serving an authorized_keys list, or a single pasted key."
+read -p "Enter the github username, URL, or public key for $myUserName: " myKeySource
 
 # Create user account with default password of ChangeMe
 echo "Creating the user $myUserName and assigning permissions"
@@ -26,12 +27,21 @@ chmod 700 /home/$myUserName/.ssh
 touch /home/$myUserName/.ssh/authorized_keys
 # set permissions
 chmod 600 /home/$myUserName/.ssh/authorized_keys
-# get the ssh-key-sync application form github
-wget https://github.com/shoenig/ssh-key-sync/releases/download/v1.7.2/ssh-key-sync_1.7.2_linux_amd64.tar.gz
-# install  ssh-key-syn
-tar -C /usr/local/bin -xf ssh-key-sync_1.7.2_linux_amd64.tar.gz
-# execute ssh-key-sync to get the pub keys for this user
-ssh-key-sync --github-user $myGitName --system-user $myUserName
+# add the pub key(s) for this user, from whichever source was given
+case "$myKeySource" in
+	ssh-*|ecdsa-*|sk-*)
+		# a single public key pasted at the prompt
+		echo "$myKeySource" >> /home/$myUserName/.ssh/authorized_keys
+		;;
+	http://*|https://*)
+		# a URL serving an authorized_keys style list
+		wget -q -O - "$myKeySource" >> /home/$myUserName/.ssh/authorized_keys
+		;;
+	*)
+		# anything else is a github username
+		wget -q -O - "https://github.com/$myKeySource.keys" >> /home/$myUserName/.ssh/authorized_keys
+		;;
+esac
 chown -R $myUserName:$myUserName /home/$myUserName
 
 ipaddress=`ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1'`
