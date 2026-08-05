@@ -49,4 +49,17 @@ case "$myKeySource" in
 		wget -q -O - "$myKeyUrl" >> $myKeyFile
 		;;
 esac
+
+# drop the maintenance scripts in the new user's home, anyone with console access here is an admin
+myScriptUrl=https://raw.githubusercontent.com/sorvani/freepbx17-initial-setup-scripts/main
+for myScript in update.sh add_debian_user.sh; do
+	# use the local copy if it is here, otherwise pull it from github
+	if [ -f "$myScript" ]; then
+		cp "$myScript" /home/$myUserName/$myScript
+	else
+		wget -q -O /home/$myUserName/$myScript "$myScriptUrl/$myScript"
+	fi
+	chmod +x /home/$myUserName/$myScript
+done
+
 chown -R $myUserName:$myUserName /home/$myUserName

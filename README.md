@@ -80,6 +80,12 @@ Also placed in your home directory by `root_setup.sh`:
 sudo ./add_debian_user.sh
 ```
 
+It gives the new user `update.sh` and `add_debian_user.sh` in their own home
+directory too. Anyone with console access to a FreePBX box is an administrator
+regardless, so there is nothing gained by making them hunt for the scripts.
+`post_install_cleanup.sh` is not copied — that one is a single pass right after
+the FreePBX install and is not useful to a user added later.
+
 The user half of `root_setup.sh` on its own, with the same key source options.
 
 ## SSH key sources
