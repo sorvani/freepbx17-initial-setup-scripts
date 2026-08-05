@@ -1,7 +1,7 @@
 # FreePBX 17 Initial Setup Scripts
 
 Bootstrap scripts for a fresh FreePBX 17 (Debian) host: create an SSH user with
-keys pulled from GitHub, then strip the commercial modules you are not
+their public keys installed, then strip the commercial modules you are not
 licensing after FreePBX is installed.
 
 FreePBX 17 moved to Debian, so these replace
@@ -25,15 +25,9 @@ chmod +x root_setup.sh
 ./root_setup.sh
 ```
 
-It asks for a Linux username and where to get that user's SSH public keys, then
-creates the account with sudo and writes the keys to `authorized_keys`. The key
-source can be any of:
-
-| Input | What happens |
-| --- | --- |
-| A GitHub username | Fetches `https://github.com/<user>.keys` |
-| A `http://` or `https://` URL | Fetches it as-is; expects an `authorized_keys` style list |
-| A single public key (`ssh-ed25519 AAAA...`) | Written straight to `authorized_keys` |
+It asks for a Linux username and where to get that user's SSH public keys (see
+[SSH key sources](#ssh-key-sources) below), then creates the account with sudo
+and writes the keys to `authorized_keys`.
 
 The password is set to `ChangeMe` and **expired immediately**, so the first SSH
 login forces a change. Log back in as the new user before continuing with the
@@ -62,6 +56,71 @@ sudo ./add_debian_user.sh
 ```
 
 The user half of `root_setup.sh` on its own, with the same key source options.
+
+## SSH key sources
+
+Both `root_setup.sh` and `add_debian_user.sh` prompt for the new user's public
+keys. Whatever you type is matched against three cases, in this order:
+
+### 1. A single public key, pasted
+
+Anything starting with `ssh-`, `ecdsa-`, or `sk-` is treated as one literal key
+and written to `authorized_keys` unchanged. Use this when the person's keys are
+not published anywhere — they paste the contents of their `~/.ssh/id_ed25519.pub`
+and you are done.
+
+```
+Enter the github username, URL, or public key for jared: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExampleKeyDataHere jared@laptop
+```
+
+The `sk-` prefix covers FIDO/hardware-backed keys (`sk-ssh-ed25519@openssh.com`).
+
+> [!NOTE]
+> This branch takes **one** key, because the prompt reads a single line. If you
+> need several, use a URL or run `add_debian_user.sh` again.
+
+### 2. A URL
+
+Anything starting with `http://` or `https://` is fetched as-is and appended.
+The response is expected to already be in `authorized_keys` format — one key per
+line. Useful for a team key list you host yourself.
+
+```
+Enter the github username, URL, or public key for jared: https://keys.example.com/jared.keys
+```
+
+### 3. A GitHub username
+
+Anything else is treated as a GitHub username and expanded to
+`https://github.com/<username>.keys`. That is a public, unauthenticated endpoint
+GitHub has served for years — it returns the account's SSH **authentication**
+keys, one per line, already in the right format.
+
+```
+Enter the github username, URL, or public key for jared: sorvani
+```
+
+> [!WARNING]
+> A GitHub account with **no SSH keys uploaded**, and an **organization** name
+> rather than a personal one, both return HTTP 200 with an empty body. Nothing
+> is added to `authorized_keys` and the script does not warn you. Only a
+> username that does not exist at all returns 404.
+>
+> Check the account has keys first — open `https://github.com/<username>.keys`
+> in a browser. People who clone over HTTPS with a token, or use GitHub Desktop,
+> often have none.
+
+GitHub strips the trailing comment from keys it serves, so imported keys carry
+no `user@host` label. To keep the file readable later, both scripts write a
+provenance line above each import:
+
+```
+# imported from https://github.com/sorvani.keys on 2026-08-04
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKQTopHmbABzHvsb7BFenrl...
+```
+
+`sshd` ignores lines beginning with `#`, so these are purely for whoever reads
+the file a year or two from now.
 
 ## License
 

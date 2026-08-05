@@ -28,18 +28,25 @@ touch /home/$myUserName/.ssh/authorized_keys
 # set permissions
 chmod 600 /home/$myUserName/.ssh/authorized_keys
 # add the pub key(s) for this user, from whichever source was given
+# github strips the key comment, so tag each import with where it came from and when
+myToday=$(date +%Y-%m-%d)
+myKeyFile=/home/$myUserName/.ssh/authorized_keys
 case "$myKeySource" in
 	ssh-*|ecdsa-*|sk-*)
 		# a single public key pasted at the prompt
-		echo "$myKeySource" >> /home/$myUserName/.ssh/authorized_keys
+		echo "# pasted at setup on $myToday" >> $myKeyFile
+		echo "$myKeySource" >> $myKeyFile
 		;;
 	http://*|https://*)
 		# a URL serving an authorized_keys style list
-		wget -q -O - "$myKeySource" >> /home/$myUserName/.ssh/authorized_keys
+		echo "# imported from $myKeySource on $myToday" >> $myKeyFile
+		wget -q -O - "$myKeySource" >> $myKeyFile
 		;;
 	*)
 		# anything else is a github username
-		wget -q -O - "https://github.com/$myKeySource.keys" >> /home/$myUserName/.ssh/authorized_keys
+		myKeyUrl="https://github.com/$myKeySource.keys"
+		echo "# imported from $myKeyUrl on $myToday" >> $myKeyFile
+		wget -q -O - "$myKeyUrl" >> $myKeyFile
 		;;
 esac
 chown -R $myUserName:$myUserName /home/$myUserName
