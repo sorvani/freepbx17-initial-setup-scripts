@@ -1,8 +1,8 @@
 # FreePBX 17 Initial Setup Scripts
 
-Bootstrap scripts for a fresh FreePBX 17 (Debian) host: create an SSH user with
-their public keys installed, then strip the commercial modules you are not
-licensing after FreePBX is installed.
+Bootstrap and maintenance scripts for a FreePBX 17 (Debian) host: create an SSH
+user with their public keys installed, strip the commercial modules you are not
+licensing once FreePBX is in, and patch the OS and modules from then on.
 
 FreePBX 17 moved to Debian, so these replace
 [`InitialSetup/`](https://github.com/sorvani/freepbx-helper-scripts/tree/master/InitialSetup)
@@ -72,6 +72,26 @@ reboot if the box has been up more than 30 days.
 Both the OS and the module stages can take a long time if you have not updated
 in a while.
 
+`apt upgrade` is deliberate rather than `full-upgrade`: it will never remove an
+installed package to resolve a dependency. Packages it cannot upgrade under that
+rule are reported as *kept back*, which is a prompt for a human rather than
+something to resolve unattended on a PBX.
+
+> [!NOTE]
+> If `apt update` reports
+> `E: Repository 'http://ftp.debian.org/debian stable InRelease' changed its
+> 'Codename' value from 'bookworm' to 'trixie'`, that is the FreePBX 17
+> installer's doing, not this script. It writes
+> `/etc/apt/sources.list.d/archive_uri-http_ftp_debian_org_debian-bookworm.list`
+> pinned to the `stable` suite rather than to `bookworm`, so the entry rolled
+> over when Debian 13 released. Fix it by changing `stable` to `bookworm` in
+> that file.
+>
+> Do **not** clear it with `apt update --allow-releaseinfo-change`. That accepts
+> the rollover and starts pulling Debian 13 packages onto a bookworm host whose
+> FreePBX repo is bookworm-only. Do not delete the file either — it is the only
+> source providing the `non-free` component.
+
 ## 4. Adding users later
 
 Also placed in your home directory by `root_setup.sh`:
@@ -80,13 +100,32 @@ Also placed in your home directory by `root_setup.sh`:
 sudo ./add_debian_user.sh
 ```
 
+The user half of `root_setup.sh` on its own, with the same key source options.
+
 It gives the new user `update.sh` and `add_debian_user.sh` in their own home
 directory too. Anyone with console access to a FreePBX box is an administrator
 regardless, so there is nothing gained by making them hunt for the scripts.
 `post_install_cleanup.sh` is not copied — that one is a single pass right after
 the FreePBX install and is not useful to a user added later.
 
-The user half of `root_setup.sh` on its own, with the same key source options.
+## Refreshing the scripts on an existing host
+
+The scripts are copied into a home directory **once**, when that account is
+created. Nothing updates them afterwards, so a host built months ago is still
+running whatever version it was given — including any bug since fixed here.
+
+To pull current copies onto an existing host:
+
+```bash
+cd ~
+for s in post_install_cleanup.sh update.sh add_debian_user.sh; do
+  wget -qO $s https://raw.githubusercontent.com/sorvani/freepbx17-initial-setup-scripts/main/$s
+  chmod +x $s
+done
+```
+
+Worth doing before you trust `update.sh` on a host you have not touched in a
+while.
 
 ## SSH key sources
 
