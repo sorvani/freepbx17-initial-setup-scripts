@@ -1,0 +1,4 @@
+# Local secrets. This repo is public -- never commit this file.
+# Holds GITHUB_TOKEN for the gh CLI (gh has no auth login session on this box)
+# and BNA_PBX_SUDO_PASS for root-only reads on the PBX.
+.env
