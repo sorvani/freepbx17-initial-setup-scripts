@@ -2,7 +2,7 @@
 logfile=setup.log
 printf "Beginning FreePBX 17 post install cleanup...\n" | tee -a $logfile
 if [ "$EUID" -ne 0 ]
-  then printf "This script must be executed with sudo. Please run again: sudo ./setup.sh\n" | tee -a $logfile
+  then printf "This script must be executed with sudo. Please run again: sudo ./post_install_cleanup.sh\n" | tee -a $logfile
   exit
 fi
 printf "Installing additional usefull applications\n" | tee -a $logfile
