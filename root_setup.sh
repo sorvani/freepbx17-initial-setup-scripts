@@ -49,6 +49,19 @@ case "$myKeySource" in
 		wget -q -O - "$myKeyUrl" >> $myKeyFile
 		;;
 esac
+
+# drop the other scripts in the new user's home, since the bootstrap only downloads this one
+myScriptUrl=https://raw.githubusercontent.com/sorvani/freepbx17-initial-setup-scripts/main
+for myScript in post_install_cleanup.sh update.sh add_debian_user.sh; do
+	# use the local copy if the repo was cloned, otherwise pull it from github
+	if [ -f "$myScript" ]; then
+		cp "$myScript" /home/$myUserName/$myScript
+	else
+		wget -q -O /home/$myUserName/$myScript "$myScriptUrl/$myScript"
+	fi
+	chmod +x /home/$myUserName/$myScript
+done
+
 chown -R $myUserName:$myUserName /home/$myUserName
 
 ipaddress=`ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1'`
@@ -58,3 +71,4 @@ echo "Please log out from the root user and login, via SSH to $ipaddress or the 
 echo "You will be required to change your password. It is currently set to: ChangeMe"
 echo "You will be disconnected upon successfully setting your password."
 echo "Log in again with SSH, switch to the root user, and run the FreePBX 17 installation script."
+echo "The post_install_cleanup.sh, update.sh, and add_debian_user.sh scripts have been placed in /home/$myUserName for when you need them."

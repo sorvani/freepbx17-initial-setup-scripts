@@ -13,6 +13,7 @@ which targets FreePBX 15/16 on Sangoma OS (CentOS).
 | --- | --- | --- |
 | `root_setup.sh` | root | On a bare Debian install, **before** installing FreePBX |
 | `post_install_cleanup.sh` | root | **After** the FreePBX 17 install completes |
+| `update.sh` | root | Ongoing, whenever you want to patch the OS and modules |
 | `add_debian_user.sh` | root | Any time you need another SSH user |
 
 ## 1. Before installing FreePBX
@@ -33,7 +34,15 @@ The password is set to `ChangeMe` and **expired immediately**, so the first SSH
 login forces a change. Log back in as the new user before continuing with the
 FreePBX 17 install.
 
+It also drops `post_install_cleanup.sh`, `update.sh`, and `add_debian_user.sh`
+into the new user's home directory, executable and owned by them, so the other
+scripts are already on the box when you need them. If you cloned this repo
+rather than downloading `root_setup.sh` on its own, the local copies are used;
+otherwise they are fetched from `main`.
+
 ## 2. After installing FreePBX
+
+`root_setup.sh` already put this in your home directory:
 
 ```bash
 sudo ./post_install_cleanup.sh
@@ -49,7 +58,23 @@ UI.
 > `sangomaconnect`, `queuestats`, `faxpro`, `pms` and the rest. Read the
 > `fwconsole ma delete` list before running it if you license any of them.
 
-## 3. Adding users later
+## 3. Keeping it updated
+
+```bash
+sudo ./update.sh
+```
+
+Runs `apt update`/`upgrade`/`autoremove`, then `fwconsole ma upgradeall`,
+`fwconsole chown`, and a reload. Logs to `upgrade-YYYYmmdd-HHMMSS.log` in the
+current directory, lists any modules it upgraded, and reminds you to schedule a
+reboot if the box has been up more than 30 days.
+
+Both the OS and the module stages can take a long time if you have not updated
+in a while.
+
+## 4. Adding users later
+
+Also placed in your home directory by `root_setup.sh`:
 
 ```bash
 sudo ./add_debian_user.sh
